@@ -5,6 +5,10 @@ class Game{
         this.gamesToStart = [];
         this.activeGames = [];
         this.archiveGames = [];
+        this.winConditions =[
+            [1,2,3], [1,4,7], [1,5,9], [2,5,8], [3,6,9], [4,5,6], [7,8,9], [3,5,7]
+        ];
+
     }
 
     start(){
@@ -22,16 +26,23 @@ class Game{
             'finish': false,
             'send': false,
             'win': undefined,
+            'move':[]
         }
+
+        console.log("creategameEndBack",game);
 
         this.gamesToStart.push(game);
     }
 
     getActiveGamesForSend(){
+
+        console.log("getActiveGamesForSend",this.activeGames.filter( el => !el.send ));
         return this.activeGames.filter( el => !el.send );
     }
 
     getActiveGameById(id){
+        console.log("getActiveGameById", this.activeGames.filter( el => el.id == id )[0]);
+
         return this.activeGames.filter( el => el.id == id )[0];
     }
 
@@ -41,6 +52,7 @@ class Game{
         if( !game ){
             game = this.activeGames.filter( el => el.opponentTwo == socket_id )[0];
         }
+        console.log("getActiveGameBySocketId", game);
 
         return game;
     }
@@ -55,6 +67,7 @@ class Game{
             }else{
                 winTeam = 1;
             }
+            console.log("getActiveGamesForSend", game.id, winTeam);
 
             this.endGame(game.id, winTeam);
         }
@@ -63,9 +76,15 @@ class Game{
     startGames(){
         for (var i = 0; i < this.gamesToStart.length; i++) {
             this.gamesToStart[i].start = true;
+            console.log("DOstartGames", this.activeGames);
+            console.log("DOstartGames", this.gamesToStart[i]);
 
             this.activeGames.push(this.gamesToStart[i]);
             this.gamesToStart.splice(this.gamesToStart.indexOf(this.gamesToStart[i]), 1);
+
+            console.log("POSLEstartGames", this.activeGames);
+            console.log("POSLEstartGames", this.gamesToStart[i]);
+
         }
     }
 
@@ -76,9 +95,48 @@ class Game{
             thisGame.finish = true;
             thisGame.win = winTeam;
 
+            console.log("DoendGame", this.activeGames);
             this.archiveGames.push(thisGame);
             this.activeGames.splice(this.activeGames.indexOf(thisGame), 1);
+            console.log("POSLEendGame", this.activeGames);
         }
+    }
+
+    checkGame(game){
+
+        var winTeam = false;
+
+        this.winConditions.forEach((condition) => {
+            var winBoxes = [];
+
+            condition.forEach((value) => {
+                if(game.moves[value])
+                    winBoxes.push(game.moves[value]);
+            })
+
+            if(winBoxes.length == 3){
+                var team = winBoxes[0];
+                var winStatus = true;
+                winBoxes.forEach( (value)=> {
+                    if(team != value ){
+                        winStatus = false;
+                    }
+                })
+            }
+
+        })
+
+        return $winTeam;
+    }
+
+    move(msg){
+        var game = this.getActiveGameById(msg.game_id);
+        game.moves[msg.box_id].push(msg.tumbler);
+
+        if(game.moves.length>=5){
+            this.checkGame(game);
+        }
+        return game;
     }
 }
 

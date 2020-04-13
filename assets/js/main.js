@@ -30,15 +30,9 @@ socket.on('connect', function () {
         $('.error').text('');
         $('.error').css('display', 'none');
 
-        $old_tumbler = $tumbler;
 
-        if( $tumbler == 'plus'){
-            $tumbler = 'zero';
-        }else{
-            $tumbler = 'plus';
-        }
 
-        socket.emit('move', {'game_id': $(this).parent().parent().attr('id'), 'box_id': $(this).attr('id'), 'tumbler': $tumbler,'old_tumbler': $old_tumbler,
+        socket.emit('move', {'game_id': $(this).parent().parent().attr('id'), 'box_id': $(this).attr('id'), 'tumbler': $tumbler,
             'socket_id': socket.id});
     });
 
@@ -50,7 +44,8 @@ socket.on('connect', function () {
 
     $('.box').on('mouseout',function(){
         if( !$(this).hasClass('checked') ){
-            $(this).removeClass($tumbler);
+            $(this).removeClass("plus");
+            $(this).removeClass("zero");
         }
     })
 });
@@ -66,9 +61,16 @@ socket.on('moveAnswer', function (msg) {
     console.log(socket.id);
     console.log(msg.data, msg.allowedSocketId);
     allowedSocketId = msg.allowedSocketId;
-    $tumbler = msg.data.tumbler;
+
     $(`#${msg.data.box_id}`).addClass('checked');
-    $(`#${msg.data.box_id}`).addClass(msg.data.old_tumbler);
+    $(`#${msg.data.box_id}`).addClass(msg.data.tumbler);
+
+
+    if( msg.data.tumbler == 'plus'){
+        $tumbler = 'zero';
+    }else{
+        $tumbler = 'plus';
+    }
 
     $count += 1;
 
@@ -99,34 +101,4 @@ socket.on('moveAnswer', function (msg) {
     }
 })
 
-function checkGame(){
-    $winConditions =[
-        [1,2,3], [1,4,7], [1,5,9], [2,5,8], [3,6,9], [4,5,6], [7,8,9], [3,5,7]
-    ];
 
-    $winTeam = false;
-
-    $winConditions.forEach((condition) => {
-        $winBoxes = [];
-
-        condition.forEach((value) => {
-            $winBoxes.push($(`#${value}`));
-        })
-
-        $winPlus = $winBoxes.filter(element => element.hasClass('plus'));
-
-        if( $winPlus.length == 3 ){
-            console.log('plus');
-            $winTeam = 'plus';
-        }
-
-        $winZero = $winBoxes.filter(element => element.hasClass('zero'));
-
-        if( $winZero.length == 3 ){
-            console.log('zero');
-            $winTeam = 'zero';
-        }
-    })
-
-    return $winTeam;
-}

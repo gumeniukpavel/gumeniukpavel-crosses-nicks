@@ -33,13 +33,17 @@ io.on('connection', function(socket){
 	socket.json.send({'event': 'connected', 'name': socket.id, 'time': time});
 
     socket.on('gameEnd', function(msg){
+        console.log("gameEndBack",msg);
         game.endGame(msg.game_id, msg.winTeam);
     })
 
     socket.on('move', function(msg){
-        thisGame = game.getActiveGameById(msg.game_id);
+        console.log("moveBack",msg);
+
         let allowedSocketId,
             data;
+
+        var thisGame = this.game.move(msg);
 
         if( thisGame.opponentOne == msg.socket_id ){
             allowedSocketId = thisGame.opponentTwo;
@@ -54,6 +58,8 @@ io.on('connection', function(socket){
     })
 
     socket.on('joinToQueue', function(msg){
+        console.log("joinToQueue",msg);
+
         queue.joinToQueue(msg.socket_id);
     })
 
